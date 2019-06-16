@@ -8,6 +8,7 @@ void *__dso_handle = 0;
 
 unsigned short state;
 unsigned int counter;
+static short stamp = 1;
 
 //システムの初期化
 void initialize()
@@ -20,14 +21,14 @@ void initialize()
 void create_system()
 {
 	//周期ハンドラの起動
-	ev3_sta_cyc(EV3_CYC_TSK_1SEC);	
+	//ev3_sta_cyc(EV3_CYC_TSK_1SEC);	
 }
 
 //システムデリート
 void delete_system()
 {
 	//周期ハンドラ終了
-	ev3_stp_cyc(EV3_CYC_TSK_1SEC);
+	//ev3_stp_cyc(EV3_CYC_TSK_1SEC);
 }
 
 //LEDの状態変更
@@ -49,7 +50,6 @@ void led_change()
 			color = LED_RED;
 			break;
 	}
-
 	ev3_led_set_color(color);
 }
 
@@ -74,16 +74,31 @@ void state_change()
 	led_change();
 }
 
-//サブタスク
-void sub_task()
+void loop()
 {
-	//状態変更
-	state_change();
+    while(stamp != -1) {
+        
+    }
+    stamp *= -1;
+}
 
-	if(counter++ == 5) wup_tsk(MAIN_TASK);
-	
-	//周期タスクの終了
-	ext_tsk();
+void wait_(int time)
+{
+    if(counter++ == time) {
+        stamp *= -1;
+        wup_tsk(MAIN_TASK);
+    }
+
+    ext_tsk();
+}
+
+void make_wait()
+{
+    ev3_sta_cyc(EV3_CYC_TSK_WAIT);
+    
+    loop();
+
+    ev3_stp_cyc(EV3_CYC_TSK_WAIT);
 }
 
 //周期タスク(1sec周期)
@@ -101,9 +116,17 @@ void main_task(intptr_t unused)
 	//システムの初期化
 	initialize();
 	
+    make_wait();
+
 	//メインタスクのスリープ
 	slp_tsk();
 	
+    ev3_led_set_color(LED_GREEN);
+
+    make_wait();
+
+    slp_tsk();
+
 	//システムの削除
 	delete_system();
 
