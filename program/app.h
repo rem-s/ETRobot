@@ -20,7 +20,7 @@ void create_system();
 void delete_system();
 void motor_change();
 void state_change();
-extern void sub_task();
+extern void sub_task(intptr_t exinf);
 extern void timer_act_1sec(intptr_t exinf);
 
 #endif
