@@ -27,12 +27,14 @@ extern "C" {
 #ifndef TOPPERS_MACRO_ONLY
 
 extern void main_task(intptr_t exinf);
+//main_tskなどの"extern"がついた関数は外部のファイル(app.cfg)から読み込むためつける
 void initialize();
 void create_system();
 void delete_system();
 void led_change();
 void state_change();
-extern void sub_task();
+void func1(int);
+extern void wait_task();
 extern void timer_act_1sec(intptr_t exinf);
 
 #endif /* TOPPERS_MACRO_ONLY */
