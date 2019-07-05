@@ -13,7 +13,8 @@ extern "C" {
  *  各タスクの優先度の定義
  */
 #define MAIN_PRIORITY    TMIN_APP_TPRI + 1  /* メインタスクの優先度 */
-#define SUB_PRIORITY    TMIN_APP_TPRI + 2  /* メインタスクの優先度 */
+#define SUB_PRIORITY    　TMIN_APP_TPRI + 2  /* サブタスクの優先度 */
+#define US_PRIORITY     　TMIN_APP_TPRI + 3  /* 測距タスクの優先度 */
 /*
  *  ターゲットに依存する可能性のある定数の定義
  */
@@ -32,7 +33,8 @@ void create_system();
 void delete_system();
 void led_change();
 void state_change();
-extern void sub_task();
+extern void sub_task(intptr_t exinf);
+extern void us_task(intptr_t exinf);
 extern void timer_act_1sec(intptr_t exinf);
 
 #endif /* TOPPERS_MACRO_ONLY */

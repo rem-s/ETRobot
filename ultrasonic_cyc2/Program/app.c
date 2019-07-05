@@ -10,10 +10,10 @@ unsigned short state;
 
 // センサー、モーターの接続を定義します
 static const sensor_port_t
-    gyro_sensor     = EV3_PORT_1,
-    touch_sensor    = EV3_PORT_2,
-    ultrasonic_sensor    = EV3_PORT_3,
-    color_sensor    = EV3_PORT_4;
+    gyro_sensor        = EV3_PORT_1,
+    touch_sensor       = EV3_PORT_2,
+    ultrasonic_sensor  = EV3_PORT_3,
+    color_sensor       = EV3_PORT_4;
 
 //static const motor_port_t
 //    right_motor    = EV3_PORT_A,
@@ -37,7 +37,7 @@ void initialize()
 }
 
 // サブタスク
-void sub_task()
+void sub_task( intptr_t exinf )
 {
     // 距離の値を変更する
     dist = 5.0;
@@ -59,9 +59,10 @@ void sub_task()
 }
 
 // 距離測定
-double get_distance() {
+void us_task( intptr_t exinf ) {
     char message[30];
     int ultrasonic = 1000;
+    double tmp_dist = 100.0;
     
     ultrasonic = ev3_ultrasonic_sensor_get_distance( ultrasonic_sensor );
     if( ultrasonic == 0 ) {
@@ -72,26 +73,24 @@ double get_distance() {
     sprintf(message, "ULTRASONIC:%d          ", ultrasonic);
     ev3_lcd_draw_string( message, 0, 10 );
     
-    return ultrasonic;
+    if( ultrasonic < dist ) {
+        if(flag) {
+            wup_tsk( MAIN_TASK );
+        } else {
+            wup_tsk( SUB_TASK );
+        }
+        // タスクの終了
+        ext_tsk();
+    }
 }
 
 // 周期タスク(1sec周期)
 void timer_act_1sec( intptr_t exinf )
 {
-    double tmp_dist = 100.0;
-    // 距離の取得
-    while(tmp_dist >= dist) {
-        tmp_dist = get_distance();
-    }
+    act_tsk( US_TASK );
     
-    if(flag) {
-        wup_tsk( MAIN_TASK );
-    } else {
-        wup_tsk( SUB_TASK );
-    }
-    
-    //周期タスクの終了
-    ext_tsk();
+    // 周期ハンドラはタスクを周期的に呼び出す、ってことはget_distanceはタスクじゃないといけないのか？
+    // 周期ハンドラでやることと、特定の距離を取得するまでwhileループするやつをごっちゃになってるかも？
 }
 
 // メインタスク
