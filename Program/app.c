@@ -7,31 +7,9 @@ void *__dso_handle = 0;
 #define ORANGE_STATE 2
 
 unsigned short state;
-unsigned int counter;
-static short stamp = 1;
-static int time = 0;
-
-//システムの初期化
-void initialize()
-{
-	state = RED_STATE;
-	ev3_speaker_set_volume(100);
-	ev3_led_set_color(LED_RED);
-}
-
-//システム生成
-void create_system()
-{
-	//周期ハンドラの起動
-	ev3_sta_cyc(TIMER);	
-}
-
-//システムデリート
-void delete_system()
-{
-	//周期ハンドラ終了
-	ev3_stp_cyc(TIMER);
-}
+unsigned int counter_m, counter_s;
+static int time_m, time_s;
+static int stamp = 1;
 
 //LEDの状態変更
 void led_change()
@@ -76,19 +54,66 @@ void state_change()
 	led_change();
 }
 
+//システムの初期化
+void initialize()
+{
+	state = LED_OFF;
+	ev3_speaker_set_volume(1);
+	ev3_led_set_color(LED_RED);
+}
+
+void create_system()
+{
+	act_tsk(SUB_TASK);
+}
+
+void finalize()
+{
+	state = LED_OFF;
+	//ev3_speaker_stop();
+	ev3_led_set_color(LED_OFF);
+}
+
 void wait_task()
 {
-    if(counter++ == time) {
+    if(counter_m++ == time_m) {
+		stamp *= -1;
         wup_tsk(MAIN_TASK);
     }
-	ev3_speaker_play_tone(NOTE_A4, 1000);
-	state_change();
+	if(counter_s++ == time_s && stamp == 1) {
+        wup_tsk(SUB_TASK);
+    }
+	
+	if(counter_m < 11) ev3_speaker_play_tone(NOTE_B5, 500);
+	//state_change();
     
 	ext_tsk(); //WAIT_TASK is finished
 }
 
-void func1(int wait_time) {
-	time = wait_time;
+void sub_task()
+{
+	setTime(time_s + 3, 0); //from now to + a few seconds waiting
+	//ev3_speaker_play_tone(NOTE_E5, 500);
+	timer_reset();
+	ext_tsk();
+}
+
+void setTime(int wait_time, int flag)
+{
+	if(flag == 1) time_m = wait_time;
+	else time_s = wait_time;
+
+	if(flag == 1) ev3_sta_cyc(TIMER);
+	slp_tsk();
+	state_change();
+	ev3_speaker_play_tone(NOTE_C5, 500);
+	if(flag == 1) ev3_stp_cyc(TIMER);
+}
+
+void timer_reset()
+{
+	time_s = 0;
+	stamp *= -1;
 }
 
 //周期タスク(1sec周期)
@@ -98,21 +123,16 @@ void timer_act_1sec(intptr_t exinf)
 }
 
 //メインタスク
-void main_task(intptr_t unused)
+void main_task(intptr_t exinf)
 {
 	//システムの初期化
 	initialize();
 
-    //システムの生成
 	create_system();
 
-	func1(5);
-	
-	//メインタスクのスリープ
-	slp_tsk();
+	setTime(10, 1);
 
-	//システムの削除
-	delete_system();
+	finalize();
 
 	//タスクの終了
 	ext_tsk();
