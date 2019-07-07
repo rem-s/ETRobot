@@ -95,10 +95,6 @@ void cyc_task1(intptr_t exinf)
 		int forward = 50;
 		int turn = 0;
 		
-		//回転角度指定
-		//if (ev3_color_sensor_get_reflect(color_sensor) >= 30) turn = 10;
-		//else turn = -10;
-		
 		//倒立振り子変数
 		int right_motor_angle;
 		int left_motor_angle;
