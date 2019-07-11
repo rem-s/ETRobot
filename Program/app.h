@@ -27,8 +27,10 @@ extern "C" {
  */
 #ifndef TOPPERS_MACRO_ONLY
 
+//通常の関数
 void initialize();
 void delete_system();
+void backlash_cancel(signed char left_motor_pwm, signed char right_motor_pwm, int *right_motor_angle, int *left_motor_angle);
 
 //タスク用の関数
 extern void main_task(intptr_t exinf);

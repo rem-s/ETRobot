@@ -1,9 +1,14 @@
 #include "app.h"
 #include "balancer.h"
+#include "line_trace.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 void *__dso_handle = 0;
+
+//バックラッシュキャンセルマクロ(固定値)※調整時に変更したほうがよさそう
+#define BACKLASH 4
+#define BLACK 20
 
 //ファイル入出力
 static FILE *file;
@@ -58,7 +63,6 @@ void initialize()
 	
 	//倒立振子リセット
 	balance_init(); 
-
 }
 
 //システムデリート
@@ -95,6 +99,13 @@ void cyc_task1(intptr_t exinf)
 		int forward = 50;
 		int turn = 0;
 		
+		//カラーセンサの値取得
+		int color_sensor_value;
+		color_sensor_value = ev3_color_sensor_get_reflect(color_sensor);
+		
+		//Line trace
+		line_trace(color_sensor_value, &turn);
+		
 		//倒立振り子変数
 		int right_motor_angle;
 		int left_motor_angle;
@@ -111,11 +122,15 @@ void cyc_task1(intptr_t exinf)
 		(float)forward, (float)turn, (float)gyro_sensor_value,
 		(float)left_motor_angle, (float)right_motor_angle, (float)voltage_value);
 		
+		//バックラッシュキャンセル
+		backlash_cancel(left_motor_pwm, right_motor_pwm, &left_motor_angle, &right_motor_angle);
+		
+		//倒立振り子API
 		balance_control(
 			(float)forward,
 			(float)turn,
 			(float)gyro_sensor_value,
-			(float)3,
+			(float)0,
 			(float)left_motor_angle,
 			(float)right_motor_angle,
 			(float)voltage_value,
@@ -133,6 +148,16 @@ void cyc_task1(intptr_t exinf)
 	
 	//周期タスクの終了
 	ext_tsk();
+}
+
+//backlash cancel
+void backlash_cancel(signed char left_motor_pwm, signed char right_motor_pwm, int *right_motor_angle, int *left_motor_angle)
+{
+	if(left_motor_pwm < 0) *left_motor_angle += BACKLASH;
+	else if(left_motor_pwm > 0) *left_motor_angle -= BACKLASH;
+	
+	if(right_motor_pwm < 0) *right_motor_angle += BACKLASH;
+	else if(right_motor_pwm > 0)*right_motor_angle -= BACKLASH;
 }
 
 //周期タスク1(400msec周期)
