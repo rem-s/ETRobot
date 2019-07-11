@@ -1,6 +1,8 @@
 #include "app.h"
 #include "balancer.h"
 #include "line_trace.h"
+#include "sensor_process.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -101,10 +103,14 @@ void cyc_task1(intptr_t exinf)
 		
 		//カラーセンサの値取得
 		int color_sensor_value;
+		int color_sensor_filtered_value;
 		color_sensor_value = ev3_color_sensor_get_reflect(color_sensor);
 		
+		//filtering
+		filtering(int color_sensor_value, int *color_sensor_filtered_value);
+		
 		//Line trace
-		line_trace(color_sensor_value, &turn);
+		line_trace(color_sensor_filtered_value, &turn);
 		
 		//倒立振り子変数
 		int right_motor_angle;
