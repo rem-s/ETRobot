@@ -103,14 +103,14 @@ void cyc_task1(intptr_t exinf)
 		
 		//カラーセンサの値取得
 		int color_sensor_value;
-		int color_sensor_filtered_value;
+		float color_sensor_filtered_value;
+		float color_sensor_normalize_value;
 		color_sensor_value = ev3_color_sensor_get_reflect(color_sensor);
-		
-		//filtering
-		filtering(int color_sensor_value, int *color_sensor_filtered_value);
-		
+		filtering(color_sensor_value, &color_sensor_filtered_value);
+		normalization(color_sensor_filtered_value, &color_sensor_normalize_value);
+
 		//Line trace
-		line_trace(color_sensor_filtered_value, &turn);
+		line_trace(color_sensor_normalize_value, &turn);
 		
 		//倒立振り子変数
 		int right_motor_angle;
@@ -119,14 +119,16 @@ void cyc_task1(intptr_t exinf)
 		int voltage_value;
 		signed char right_motor_pwm;
 		signed char left_motor_pwm;
+		
 		left_motor_angle = ev3_motor_get_counts(left_motor);
 		right_motor_angle = ev3_motor_get_counts(right_motor);
 		gyro_sensor_value = ev3_gyro_sensor_get_rate(gyro_sensor);
 		voltage_value = ev3_battery_voltage_mV();
 		
-		fprintf(file, "%lf\t : %lf\t : %lf\t : %lf\t : %lf\t : %lf\t\n", 
+		//ファイル出力
+		fprintf(file, "%lf\t : %lf\t : %lf\t : %lf\t : %lf\t : %lf\t : %lf\t : %lf\t : %lf\t\n", 
 		(float)forward, (float)turn, (float)gyro_sensor_value,
-		(float)left_motor_angle, (float)right_motor_angle, (float)voltage_value);
+		(float)left_motor_angle, (float)right_motor_angle, (float)voltage_value, (float)color_sensor_value, (float)color_sensor_filtered_value, (float)color_sensor_normalize_value);
 		
 		//バックラッシュキャンセル
 		backlash_cancel(left_motor_pwm, right_motor_pwm, &left_motor_angle, &right_motor_angle);
@@ -172,11 +174,20 @@ void cyc_handler1(intptr_t exinf)
 	act_tsk(CYC_TASK1);
 }
 
+//Bluetooth通信受信待ち
+void bluetooth_w()
+{
+	int cnct_done = 0;
+}
+
 //メインタスク
 void main_task(intptr_t exinf)
 {
 	//システムの初期化
 	initialize();
+	
+	//Bluetooth通信
+	bluetooth_w();
 	
 	//周期ハンドラの起動
 	ev3_sta_cyc(CYC_HANDLER1);

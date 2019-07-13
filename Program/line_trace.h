@@ -8,7 +8,7 @@ extern "C" {
 #define BLACK 20
 
 //通常の関数
-void line_trace(int color_value, int *turn);
+void line_trace(float color_value, int *turn);
 
 #endif /* TOPPERS_MACRO_ONLY */
 

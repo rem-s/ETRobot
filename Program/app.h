@@ -30,6 +30,7 @@ extern "C" {
 //通常の関数
 void initialize();
 void delete_system();
+void bluetooth_w();
 void backlash_cancel(signed char left_motor_pwm, signed char right_motor_pwm, int *right_motor_angle, int *left_motor_angle);
 
 //タスク用の関数

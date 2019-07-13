@@ -8,7 +8,8 @@ extern "C" {
 #define BLACK 20
 
 //通常の関数
-void filtering(int sensor_value, int *filtered_value);
+void filtering(int sensor_value, float *filtered_value);
+void normalization(float sensor_value, float *normalized_value);
 
 #endif /* TOPPERS_MACRO_ONLY */
 

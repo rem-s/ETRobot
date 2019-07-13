@@ -9,7 +9,8 @@ typedef struct Queue{
 
 static Queue_t q ={0,1,0};
 
-void filtering(int sensor_value, int *filtered_value)
+//フィルタリング
+void filtering(int sensor_value, float *filtered_value)
 {
 	int i;
 	int sum;
@@ -31,4 +32,10 @@ void filtering(int sensor_value, int *filtered_value)
 	if(q.head == 3)	q.is_full = 1;
 	
 	q.head = (q.head % 3);
+}
+
+//センサー正規化
+void normalization(float sensor_value, float *normalized_value)
+{
+	*normalized_value = sensor_value;
 }
