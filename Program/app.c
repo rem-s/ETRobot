@@ -2,6 +2,7 @@
 #include "balancer.h"
 #include "line_trace.h"
 #include "sensor_process.h"
+#include "bluetooth.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,6 +28,9 @@ static const motor_port_t
     left_motor      = EV3_PORT_B,
     right_motor     = EV3_PORT_A,
     tail_motor      = EV3_PORT_C;
+	
+//bluetooth connect変数
+static volatile int bluetooth_cnct = 0;
 
 //初期化処理
 void initialize()
@@ -168,16 +172,10 @@ void backlash_cancel(signed char left_motor_pwm, signed char right_motor_pwm, in
 	else if(right_motor_pwm > 0)*right_motor_angle -= BACKLASH;
 }
 
-//周期タスク1(400msec周期)
+//周期タスク1(4msec周期)
 void cyc_handler1(intptr_t exinf)
 {
 	act_tsk(CYC_TASK1);
-}
-
-//Bluetooth通信受信待ち
-void bluetooth_w()
-{
-	int cnct_done = 0;
 }
 
 //メインタスク
