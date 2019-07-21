@@ -12,6 +12,7 @@ void *__dso_handle = 0;
 //バックラッシュキャンセルマクロ(固定値)※調整時に変更したほうがよさそう
 #define BACKLASH 4
 #define BLACK 20
+#define TAIL_INIT_POSITION 80
 
 //ファイル入出力
 static FILE *file;
@@ -63,6 +64,7 @@ void initialize()
 	//走行モーターエンコーダーリセット
     ev3_motor_reset_counts(left_motor);
     ev3_motor_reset_counts(right_motor);
+	ev3_motor_reset_counts(tail_motor);
 
     //ジャイロセンサーリセット
     ev3_gyro_sensor_reset(gyro_sensor);

@@ -15,6 +15,7 @@ extern "C" {
 #define MAIN_PRIORITY   TMIN_APP_TPRI + 1  /* メインタスクの優先度 */
 #define CYC1_PRIORITY 	TMIN_APP_TPRI + 3 /* 周期タスク１の優先度 */
 
+
 /*
  *  ターゲットに依存する可能性のある定数の定義
  */
@@ -37,7 +38,8 @@ void backlash_cancel(signed char left_motor_pwm, signed char right_motor_pwm, in
 extern void main_task(intptr_t exinf);
 extern void cyc_task1(intptr_t exinf);
 extern void cyc_handler1(intptr_t exinf);
-
+extern void cyc_task2(intptr_t exinf);
+extern void cyc_handler2(intptr_t exinf);
 
 #endif /* TOPPERS_MACRO_ONLY */
 
