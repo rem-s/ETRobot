@@ -3,6 +3,7 @@
 #define N 11 // サンプリングの個数
 
 void filtering(int, float *);
+void normalization(float, float *);
 
 static volatile float hw[N] = {0.0000, -0.0072, -0.0215, 0.0612, 0.2738, 0.3874, 0.2738, 0.0612, -0.0215, -0.0072, 0.0000};
 
@@ -45,4 +46,10 @@ void filtering(int sensor_value, float *filtered_value) {
     }
     // printf("y = %f\n", *filtered_value);
 	
+}
+
+//センサー正規化
+void normalization(float sensor_value, float *normalized_value)
+{
+	*normalized_value = sensor_value;
 }
