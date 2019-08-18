@@ -10,12 +10,11 @@
 void *__dso_handle = 0;
 
 //バックラッシュキャンセルマクロ(固定値)※調整時に変更したほうがよさそう
-#define BACKLASH 4
-#define BLACK 20
-#define TAIL_INIT_POSITION 80
+#define BACKLASH 2
 
 //ファイル入出力
-static FILE *file;
+FILE *bt;
+FILE *file;
 
 //センサポート定義
 static const sensor_port_t
@@ -31,14 +30,24 @@ static const motor_port_t
     tail_motor      = EV3_PORT_C;
 	
 //bluetooth connect変数
-static volatile int bluetooth_cnct = 0;
+static volatile int bluetooth_done = 0;
+static volatile int tail_done = 0;
+static volatile int touch_flag = 0;
+static volatile int sonor_flag = 0;
+
+//テイルモーター制御用情報変数
+static tail_type tail_info = {99, 0, 0, 0.0};
+
+//スタートフォワード
+static float Forward = 0;
+static float Gyro_offset = 5;
 
 //初期化処理
 void initialize()
-{
-	//ファイルデータ取得
-	file = fopen("TASKER.txt", "w");
-	fprintf(file, "file open\n");
+{	
+	//Bluetooth接続
+	bt = ev3_serial_open_file(EV3_SERIAL_BT);
+	file = fopen("forward.txt", "w");
 	
 	//カラーセンサ初期化
 	ev3_sensor_config( color_sensor, COLOR_SENSOR );
@@ -71,16 +80,26 @@ void initialize()
 	
 	//倒立振子リセット
 	balance_init(); 
+	
+	//テイルモーター初期化
+	tail_info.diff = 99;
+	tail_info.speed = 0.8;
+	tail_info.now_angle = ev3_motor_get_counts(tail_motor);;
+	tail_info.target_angle = FIRST_TAIL_POSITION;
+	
 }
 
 //システムデリート
 void delete_system()
 {
 	//ファイルクローズ
+	fclose(bt);
 	fclose(file);
 	
 	//周期ハンドラの終了
 	ev3_stp_cyc(CYC_HANDLER1);
+	ev3_stp_cyc(CYC_HANDLER2);
+	ev3_stp_cyc(CYC_HANDLER4);
 	
 	//モーターストップ
 	ev3_motor_stop(right_motor, true);
@@ -88,11 +107,83 @@ void delete_system()
 	ev3_motor_stop(tail_motor, true);
 }
 
-//周期タスク関数
-void cyc_task1(intptr_t exinf)
+//周期タスク4
+void cyc_task4(intptr_t exinf)
 {
-	//タッチセンサ状態
-	static int touch_flag = 0;
+    int sonor;
+    
+    //測距センサの値を取得する
+    sonor = ev3_ultrasonic_sensor_get_distance(sonor_sensor);
+    
+    //取得した値が5cm未満の状態が20回続いたらメインタスクを起動する
+	if(touch_flag == 0)
+	{
+		//5cm未満の値を取得している間、フラグに加算する
+		if(sonor < 20) sonor_flag++;
+		//フラグをリセットする
+		else sonor_flag -= 5;
+		if(sonor_flag >= 20)
+		{
+			wup_tsk(MAIN_TASK);
+			touch_flag = 1;
+		}
+	}
+    
+    //周期タスクの終了
+    ext_tsk();
+}
+
+//周期タスク3
+void cyc_task3(intptr_t exinf)
+{	
+	if(bluetooth_done == 0)
+	{
+		if(bluetooth_w())
+		{	
+			bluetooth_done = 1;
+			wup_tsk(MAIN_TASK);
+		}
+	}
+	//周期タスクの終了
+	ext_tsk();
+}
+
+//周期タスク2
+void cyc_task2(intptr_t exinf)
+{	
+	float tail_power;
+	
+	tail_info.now_angle = ev3_motor_get_counts(tail_motor);
+	tail_info.diff = tail_info.target_angle - tail_info.now_angle;
+	tail_power = (float)tail_info.diff * (float)tail_info.speed;
+
+	if(tail_power > 60) tail_power = 60;
+	if(tail_power < -60) tail_power = -60;
+	
+	if(tail_power == 0) ev3_motor_stop(tail_motor, true);
+	else ev3_motor_set_power(tail_motor, (int)tail_power);	
+	
+	if(tail_info.now_angle == START_TAIL_POSITION)
+	{
+		if(tail_info.diff == 0) wup_tsk(MAIN_TASK);
+	}
+	
+	//周期タスクの終了
+	ext_tsk();
+}
+
+//周期タスク関数1
+void cyc_task1(intptr_t exinf)
+{	
+	//テイルモーター確認
+	if(tail_info.target_angle == START_TAIL_POSITION) 
+	{
+		if(tail_info.diff == 0)
+		{
+			tail_info.speed = 0.5;
+			tail_info.target_angle = ISRUN_TAIL_POSITION;
+		}
+	}
 	
 	//タッチセンサONでメインタスクを起動する
 	if(touch_flag) wup_tsk(MAIN_TASK);
@@ -131,17 +222,15 @@ void cyc_task1(intptr_t exinf)
 		gyro_sensor_value = ev3_gyro_sensor_get_rate(gyro_sensor);
 		voltage_value = ev3_battery_voltage_mV();
 		
-		//ファイル出力
-		fprintf(file, "%lf\t : %lf\t : %lf\t : %lf\t : %lf\t : %lf\t : %lf\t : %lf\t : %lf\t\n", 
-		(float)forward, (float)turn, (float)gyro_sensor_value,
-		(float)left_motor_angle, (float)right_motor_angle, (float)voltage_value, (float)color_sensor_value, (float)color_sensor_filtered_value, (float)color_sensor_normalize_value);
-		
 		//バックラッシュキャンセル
 		backlash_cancel(left_motor_pwm, right_motor_pwm, &left_motor_angle, &right_motor_angle);
 		
+		//フォワード
+		Forward += KFORWARD_START * (forward - Forward);		
+		
 		//倒立振り子API
 		balance_control(
-			(float)forward,
+			(float)Forward,
 			(float)turn,
 			(float)gyro_sensor_value,
 			(float)0,
@@ -150,13 +239,16 @@ void cyc_task1(intptr_t exinf)
 			(float)voltage_value,
 			(signed char*)&left_motor_pwm,
 			(signed char*)&right_motor_pwm);
+			
+		//ファイル書き込み
+		fprintf(file, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",(float)color_sensor_value,(float)color_sensor_normalize_value,(float)Forward,(float)turn,(float)gyro_sensor_value,(float)left_motor_angle,(float)right_motor_angle,(float)voltage_value,(float)left_motor_pwm,(float)right_motor_pwm);
 		
 		//左モーター制御
-		if(left_motor_pwm == 0) ev3_motor_stop(left_motor, true);  
+		if(left_motor_pwm == 0) ev3_motor_stop(left_motor, false);  
 		else ev3_motor_set_power(left_motor, (int)left_motor_pwm);
 		
 		//右モーター制御
-		if(right_motor_pwm == 0) ev3_motor_stop(right_motor, true);  
+		if(right_motor_pwm == 0) ev3_motor_stop(right_motor, false);  
 		else ev3_motor_set_power(right_motor, (int)right_motor_pwm);
 	}
 	
@@ -180,18 +272,51 @@ void cyc_handler1(intptr_t exinf)
 	act_tsk(CYC_TASK1);
 }
 
+//周期タスク2(10msec周期)
+void cyc_handler2(intptr_t exinf)
+{
+	act_tsk(CYC_TASK2);
+}
+
+//周期タスク3(1msec周期)
+void cyc_handler3(intptr_t exinf)
+{
+	act_tsk(CYC_TASK3);
+}
+
+//周期タスク4(100msec周期)
+void cyc_handler4(intptr_t exinf)
+{
+	act_tsk(CYC_TASK4);
+}
+
 //メインタスク
 void main_task(intptr_t exinf)
 {
 	//システムの初期化
 	initialize();
 	
-	//Bluetooth通信
-	bluetooth_w();
+	//Tail制御用タスクの起動
+	ev3_sta_cyc(CYC_HANDLER2);
+	ev3_sta_cyc(CYC_HANDLER3);
+	
+	//メインタスクのスリープ
+	slp_tsk();
+	
+	//bluetooth用タスクの停止
+	ev3_stp_cyc(CYC_HANDLER3);
+	
+	
+	//テイル起き上がり
+	tail_info.speed = 0.8;
+	tail_info.target_angle = START_TAIL_POSITION;
+	
+	slp_tsk();
 	
 	//周期ハンドラの起動
 	ev3_sta_cyc(CYC_HANDLER1);
-	
+	ev3_sta_cyc(CYC_HANDLER4);	
+
 	//メインタスクのスリープ
 	slp_tsk();
 	

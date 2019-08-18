@@ -14,7 +14,9 @@ extern "C" {
  */
 #define MAIN_PRIORITY   TMIN_APP_TPRI + 1  /* メインタスクの優先度 */
 #define CYC1_PRIORITY 	TMIN_APP_TPRI + 3 /* 周期タスク１の優先度 */
-
+#define CYC2_PRIORITY 	TMIN_APP_TPRI + 2 /* 周期タスク１の優先度 */
+#define CYC3_PRIORITY 	TMIN_APP_TPRI + 2 /* 周期タスク１の優先度 */
+#define CYC4_PRIORITY 	TMIN_APP_TPRI + 2
 
 /*
  *  ターゲットに依存する可能性のある定数の定義
@@ -22,6 +24,23 @@ extern "C" {
 #ifndef STACK_SIZE
 #define STACK_SIZE      4096        /* タスクのスタックサイズ */
 #endif /* STACK_SIZE */
+
+#define FIRST_TAIL_POSITION 85
+#define START_TAIL_POSITION 93
+#define ISRUN_TAIL_POSITION 5
+
+#define KFORWARD_START 0.25
+#define KGYRO_OFFSET 0.5
+
+typedef struct tail_type{
+	int diff;
+	int now_angle;
+	int target_angle;
+	
+	float speed;
+}tail_type;
+
+extern FILE *bt;
 
 /*
  *  関数のプロトタイプ宣言
@@ -31,7 +50,6 @@ extern "C" {
 //通常の関数
 void initialize();
 void delete_system();
-void bluetooth_w();
 void backlash_cancel(signed char left_motor_pwm, signed char right_motor_pwm, int *right_motor_angle, int *left_motor_angle);
 
 //タスク用の関数
@@ -40,6 +58,11 @@ extern void cyc_task1(intptr_t exinf);
 extern void cyc_handler1(intptr_t exinf);
 extern void cyc_task2(intptr_t exinf);
 extern void cyc_handler2(intptr_t exinf);
+extern void cyc_task3(intptr_t exinf);
+extern void cyc_handler3(intptr_t exinf);
+extern void cyc_task4(intptr_t exinf);
+extern void cyc_handler4(intptr_t exinf);
+
 
 #endif /* TOPPERS_MACRO_ONLY */
 

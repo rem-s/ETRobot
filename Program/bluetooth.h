@@ -5,7 +5,7 @@ extern "C" {
 #ifndef TOPPERS_MACRO_ONLY
 
 //通常の関数
-void bluetooth_w();
+int bluetooth_w();
 
 #endif /* TOPPERS_MACRO_ONLY */
 
