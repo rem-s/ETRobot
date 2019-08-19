@@ -57,7 +57,7 @@ void initialize()
     ev3_gyro_sensor_reset(gyro_sensor);
 	
 	//倒立振子リセット
-	balance_init(); 
+	//balance_init(); 
 
 }
 
@@ -79,6 +79,7 @@ void delete_system()
 //周期タスク関数
 void cyc_task1(intptr_t exinf)
 {
+	static int a = 0;
 	//タッチセンサ状態
 	static int touch_flag = 0;
 	
@@ -87,52 +88,35 @@ void cyc_task1(intptr_t exinf)
 	
 	//タッチセンサOFFで周期タスクの実行中断
 	else
-	{	
-		//タッチセンサ状態取得
-		touch_flag = ev3_touch_sensor_is_pressed(touch_sensor);
-		
-		//全身と回転の角度の変数
-		int forward = 50;
-		int turn = 0;
-		
-		//回転角度指定
-		//if (ev3_color_sensor_get_reflect(color_sensor) >= 30) turn = 10;
-		//else turn = -10;
-		
-		//倒立振り子変数
-		int right_motor_angle;
-		int left_motor_angle;
-		int gyro_sensor_value;
-		int voltage_value;
-		signed char right_motor_pwm;
-		signed char left_motor_pwm;
-		left_motor_angle = ev3_motor_get_counts(left_motor);
-		right_motor_angle = ev3_motor_get_counts(right_motor);
-		gyro_sensor_value = ev3_gyro_sensor_get_rate(gyro_sensor);
-		voltage_value = ev3_battery_voltage_mV();
-		
-		fprintf(file, "%lf\t : %lf\t : %lf\t : %lf\t : %lf\t : %lf\t\n", 
-		(float)forward, (float)turn, (float)gyro_sensor_value,
-		(float)left_motor_angle, (float)right_motor_angle, (float)voltage_value);
-		
-		balance_control(
-			(float)forward,
-			(float)turn,
-			(float)gyro_sensor_value,
-			(float)3,
-			(float)left_motor_angle,
-			(float)right_motor_angle,
-			(float)voltage_value,
-			(signed char*)&left_motor_pwm,
-			(signed char*)&right_motor_pwm);
-		
-		//左モーター制御
-		if(left_motor_pwm == 0) ev3_motor_stop(left_motor, true);  
-		else ev3_motor_set_power(left_motor, (int)left_motor_pwm);
-		
-		//右モーター制御
-		if(right_motor_pwm == 0) ev3_motor_stop(right_motor, true);  
-		else ev3_motor_set_power(right_motor, (int)right_motor_pwm);
+	{
+	ev3_lcd_set_font(EV3_FONT_MEDIUM);
+	ev3_lcd_draw_string ("Chocolate\n",10,0);
+
+
+	ev3_speaker_play_tone(NOTE_C4,10);
+	ev3_speaker_play_tone(NOTE_E4,10);
+	ev3_speaker_play_tone(NOTE_G4,10);
+	
+		ev3_speaker_play_tone(NOTE_C4,10);
+	ev3_speaker_play_tone(NOTE_E4,10);
+	ev3_speaker_play_tone(NOTE_G4,10);
+		ev3_speaker_play_tone(NOTE_C4,10);
+	ev3_speaker_play_tone(NOTE_E4,10);
+	ev3_speaker_play_tone(NOTE_G4,10);
+		ev3_speaker_play_tone(NOTE_C4,10);
+	ev3_speaker_play_tone(NOTE_E4,10);
+	ev3_speaker_play_tone(NOTE_G4,10);
+		ev3_speaker_play_tone(NOTE_C4,10);
+	ev3_speaker_play_tone(NOTE_E4,10);
+	ev3_speaker_play_tone(NOTE_G4,10);
+		ev3_speaker_play_tone(NOTE_E4,10);
+	ev3_speaker_play_tone(NOTE_G4,10);
+		ev3_speaker_play_tone(NOTE_C4,10);
+	ev3_speaker_play_tone(NOTE_E4,10);
+	ev3_speaker_play_tone(NOTE_G4,10);
+	ev3_lcd_draw_string ("Shinchoku",100,0);
+	a++;
+	if(ev3_button_is_pressed (ENTER_BUTTON))exit(8);
 	}
 	
 	//周期タスクの終了
