@@ -39,8 +39,15 @@ static volatile int sonor_flag = 0;
 static tail_type tail_info = {99, 0, 0, 0.0};
 
 //スタートフォワード
+//Gyro_offsetは１０～２０などの間にすること
 static float Forward = 0;
-static float Gyro_offset = 5;
+static float Gyro_offset = 12;
+
+//振り子センサカウント
+int color_sensor_value;
+int turn = 0;
+static int sensor_count = 0;
+static int pid_count = 0;
 
 //初期化処理
 void initialize()
@@ -180,7 +187,7 @@ void cyc_task1(intptr_t exinf)
 	{
 		if(tail_info.diff == 0)
 		{
-			tail_info.speed = 0.5;
+			tail_info.speed = 0.2;
 			tail_info.target_angle = ISRUN_TAIL_POSITION;
 		}
 	}
@@ -195,19 +202,19 @@ void cyc_task1(intptr_t exinf)
 		touch_flag = ev3_touch_sensor_is_pressed(touch_sensor);
 		
 		//全身と回転の角度の変数
-		int forward = 50;
-		int turn = 0;
+		int forward = 80;
 		
 		//カラーセンサの値取得
-		int color_sensor_value;
 		float color_sensor_filtered_value;
 		float color_sensor_normalize_value;
-		color_sensor_value = ev3_color_sensor_get_reflect(color_sensor);
-		filtering(color_sensor_value, &color_sensor_filtered_value);
-		normalization(color_sensor_filtered_value, &color_sensor_normalize_value);
-
-		//Line trace
-		line_trace(color_sensor_normalize_value, &turn);
+		if(sensor_count++ == 1)
+		{
+			color_sensor_value = ev3_color_sensor_get_reflect(color_sensor);
+			filtering(color_sensor_value, &color_sensor_filtered_value);
+			normalization(color_sensor_filtered_value, &color_sensor_normalize_value);
+			sensor_count = 0;
+			line_trace(color_sensor_normalize_value, &turn);
+		}
 		
 		//倒立振り子変数
 		int right_motor_angle;
@@ -226,14 +233,16 @@ void cyc_task1(intptr_t exinf)
 		backlash_cancel(left_motor_pwm, right_motor_pwm, &left_motor_angle, &right_motor_angle);
 		
 		//フォワード
-		Forward += KFORWARD_START * (forward - Forward);		
+		Forward += KFORWARD_START * (forward - Forward);
+		Gyro_offset += KGYRO_OFFSET * (2 - Gyro_offset);
+		if(Forward < 49)turn = 0;
 		
 		//倒立振り子API
 		balance_control(
 			(float)Forward,
 			(float)turn,
 			(float)gyro_sensor_value,
-			(float)0,
+			(float)Gyro_offset,
 			(float)left_motor_angle,
 			(float)right_motor_angle,
 			(float)voltage_value,
@@ -241,7 +250,7 @@ void cyc_task1(intptr_t exinf)
 			(signed char*)&right_motor_pwm);
 			
 		//ファイル書き込み
-		fprintf(file, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",(float)color_sensor_value,(float)color_sensor_normalize_value,(float)Forward,(float)turn,(float)gyro_sensor_value,(float)left_motor_angle,(float)right_motor_angle,(float)voltage_value,(float)left_motor_pwm,(float)right_motor_pwm);
+		fprintf(file, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",(float)color_sensor_value,(float)color_sensor_normalize_value,(float)Forward,(float)turn,(float)gyro_sensor_value,(float)left_motor_angle,(float)right_motor_angle,(float)voltage_value,(float)left_motor_pwm,(float)right_motor_pwm,(float)Gyro_offset);
 		
 		//左モーター制御
 		if(left_motor_pwm == 0) ev3_motor_stop(left_motor, false);  
@@ -308,7 +317,7 @@ void main_task(intptr_t exinf)
 	
 	
 	//テイル起き上がり
-	tail_info.speed = 0.8;
+	tail_info.speed = 1.5;
 	tail_info.target_angle = START_TAIL_POSITION;
 	
 	slp_tsk();

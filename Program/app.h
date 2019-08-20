@@ -26,11 +26,12 @@ extern "C" {
 #endif /* STACK_SIZE */
 
 #define FIRST_TAIL_POSITION 85
-#define START_TAIL_POSITION 93
+#define START_TAIL_POSITION 97
 #define ISRUN_TAIL_POSITION 5
 
-#define KFORWARD_START 0.25
-#define KGYRO_OFFSET 0.5
+//調整が必要
+#define KFORWARD_START 0.025
+#define KGYRO_OFFSET 0.025
 
 typedef struct tail_type{
 	int diff;
