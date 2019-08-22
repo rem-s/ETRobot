@@ -1,3 +1,6 @@
+#ifndef __BLUETOOTH_HEADER__
+#define __BLUETOOTH_HEADER__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -11,4 +14,6 @@ int bluetooth_w();
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

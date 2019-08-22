@@ -1,3 +1,6 @@
+#ifndef __APP_HEADER__
+#define __APP_HEADER__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,8 +33,10 @@ extern "C" {
 #define ISRUN_TAIL_POSITION 5
 
 //調整が必要
-#define KFORWARD_START 0.025
+#define KFORWARD_START 0.020
 #define KGYRO_OFFSET 0.025
+#define TARGET_FORWARD 80
+#define TARGET_GYRO_OFFSET 2
 
 typedef struct tail_type{
 	int diff;
@@ -69,4 +74,6 @@ extern void cyc_handler4(intptr_t exinf);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

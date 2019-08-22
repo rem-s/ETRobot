@@ -1,3 +1,6 @@
+#ifndef __SENSOR_PROCESS_HEADER__
+#define __SENSOR_PROCESS_HEADER__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -23,4 +26,6 @@ static volatile int first_color_flag = 0;
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

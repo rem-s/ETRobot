@@ -1,3 +1,6 @@
+#ifndef __LINE_TRACE_HEADER__
+#define __LINE_TRACE_HEADER__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -13,7 +16,7 @@ extern "C" {
 #define PU 0.6f
 #define TI 0.5*PU
 #define TD 0.125*PU
-#define A 0.85
+#define A 1.0
 
 #define KP 0.60f*KU*A
 #define KI KP/TI*A
@@ -32,4 +35,6 @@ extern float d;
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

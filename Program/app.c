@@ -3,6 +3,7 @@
 #include "line_trace.h"
 #include "sensor_process.h"
 #include "bluetooth.h"
+#include "measure_position.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -40,14 +41,21 @@ static tail_type tail_info = {99, 0, 0, 0.0};
 
 //スタートフォワード
 //Gyro_offsetは１０～２０などの間にすること
-static float Forward = 0;
+static float Forward = 10;
 static float Gyro_offset = 12;
 
 //振り子センサカウント
 int color_sensor_value;
 int turn = 0;
-static int sensor_count = 0;
-static int pid_count = 0;
+
+//自己位置判定用変数
+float theta;
+float x_position;
+float y_position;
+float speed;
+
+//倒れる判定変数
+static int fall;
 
 //初期化処理
 void initialize()
@@ -122,20 +130,6 @@ void cyc_task4(intptr_t exinf)
     //測距センサの値を取得する
     sonor = ev3_ultrasonic_sensor_get_distance(sonor_sensor);
     
-    //取得した値が5cm未満の状態が20回続いたらメインタスクを起動する
-	if(touch_flag == 0)
-	{
-		//5cm未満の値を取得している間、フラグに加算する
-		if(sonor < 20) sonor_flag++;
-		//フラグをリセットする
-		else sonor_flag -= 5;
-		if(sonor_flag >= 20)
-		{
-			wup_tsk(MAIN_TASK);
-			touch_flag = 1;
-		}
-	}
-    
     //周期タスクの終了
     ext_tsk();
 }
@@ -195,26 +189,21 @@ void cyc_task1(intptr_t exinf)
 	//タッチセンサONでメインタスクを起動する
 	if(touch_flag) wup_tsk(MAIN_TASK);
 	
+	else if(fall > 100) wup_tsk(MAIN_TASK);
+	
 	//タッチセンサOFFで周期タスクの実行中断
 	else
 	{	
 		//タッチセンサ状態取得
 		touch_flag = ev3_touch_sensor_is_pressed(touch_sensor);
 		
-		//全身と回転の角度の変数
-		int forward = 80;
-		
 		//カラーセンサの値取得
 		float color_sensor_filtered_value;
 		float color_sensor_normalize_value;
-		if(sensor_count++ == 1)
-		{
-			color_sensor_value = ev3_color_sensor_get_reflect(color_sensor);
-			filtering(color_sensor_value, &color_sensor_filtered_value);
-			normalization(color_sensor_filtered_value, &color_sensor_normalize_value);
-			sensor_count = 0;
-			line_trace(color_sensor_normalize_value, &turn);
-		}
+		color_sensor_value = ev3_color_sensor_get_reflect(color_sensor);
+		filtering(color_sensor_value, &color_sensor_filtered_value);
+		normalization(color_sensor_filtered_value, &color_sensor_normalize_value);
+		line_trace(color_sensor_normalize_value, &turn);
 		
 		//倒立振り子変数
 		int right_motor_angle;
@@ -223,7 +212,6 @@ void cyc_task1(intptr_t exinf)
 		int voltage_value;
 		signed char right_motor_pwm;
 		signed char left_motor_pwm;
-		
 		left_motor_angle = ev3_motor_get_counts(left_motor);
 		right_motor_angle = ev3_motor_get_counts(right_motor);
 		gyro_sensor_value = ev3_gyro_sensor_get_rate(gyro_sensor);
@@ -233,9 +221,9 @@ void cyc_task1(intptr_t exinf)
 		backlash_cancel(left_motor_pwm, right_motor_pwm, &left_motor_angle, &right_motor_angle);
 		
 		//フォワード
-		Forward += KFORWARD_START * (forward - Forward);
-		Gyro_offset += KGYRO_OFFSET * (2 - Gyro_offset);
-		if(Forward < 49)turn = 0;
+		Forward += KFORWARD_START * (TARGET_FORWARD - Forward);
+		Gyro_offset += KGYRO_OFFSET * (TARGET_GYRO_OFFSET - Gyro_offset);
+		if(Forward < TARGET_FORWARD-1)turn = 0;
 		
 		//倒立振り子API
 		balance_control(
@@ -250,7 +238,7 @@ void cyc_task1(intptr_t exinf)
 			(signed char*)&right_motor_pwm);
 			
 		//ファイル書き込み
-		fprintf(file, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",(float)color_sensor_value,(float)color_sensor_normalize_value,(float)Forward,(float)turn,(float)gyro_sensor_value,(float)left_motor_angle,(float)right_motor_angle,(float)voltage_value,(float)left_motor_pwm,(float)right_motor_pwm,(float)Gyro_offset);
+		fprintf(file, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",(float)color_sensor_value,(float)color_sensor_normalize_value,(float)Forward,(float)turn,(float)gyro_sensor_value,(float)left_motor_angle,(float)right_motor_angle,(float)voltage_value,(float)left_motor_pwm,(float)right_motor_pwm,(float)Gyro_offset,(float)theta,(float)x_position,(float)y_position,(float)speed);
 		
 		//左モーター制御
 		if(left_motor_pwm == 0) ev3_motor_stop(left_motor, false);  
@@ -259,8 +247,20 @@ void cyc_task1(intptr_t exinf)
 		//右モーター制御
 		if(right_motor_pwm == 0) ev3_motor_stop(right_motor, false);  
 		else ev3_motor_set_power(right_motor, (int)right_motor_pwm);
+		
+		//終了判定用処理
+		if(abs(left_motor_pwm) > 90 || abs(right_motor) > 90)
+		{
+			fall++;
+		}
+		else
+		{
+			fall = 0;
+		}
+		
+		//自己位置判定
+		measure_position(right_motor_angle, left_motor_angle, &theta, &x_position, &y_position, &speed);
 	}
-	
 	//周期タスクの終了
 	ext_tsk();
 }
@@ -314,7 +314,6 @@ void main_task(intptr_t exinf)
 	
 	//bluetooth用タスクの停止
 	ev3_stp_cyc(CYC_HANDLER3);
-	
 	
 	//テイル起き上がり
 	tail_info.speed = 1.5;
