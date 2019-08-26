@@ -28,14 +28,14 @@ extern "C" {
 #define STACK_SIZE      4096        /* タスクのスタックサイズ */
 #endif /* STACK_SIZE */
 
-#define FIRST_TAIL_POSITION 85
-#define START_TAIL_POSITION 97
+#define FIRST_TAIL_POSITION 84
+#define START_TAIL_POSITION 96
 #define ISRUN_TAIL_POSITION 5
 
 //調整が必要
 #define KFORWARD_START 0.020
 #define KGYRO_OFFSET 0.025
-#define TARGET_FORWARD 80
+#define TARGET_FORWARD 30
 #define TARGET_GYRO_OFFSET 2
 
 typedef struct tail_type{

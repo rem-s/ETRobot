@@ -223,7 +223,7 @@ void cyc_task1(intptr_t exinf)
 		//フォワード
 		Forward += KFORWARD_START * (TARGET_FORWARD - Forward);
 		Gyro_offset += KGYRO_OFFSET * (TARGET_GYRO_OFFSET - Gyro_offset);
-		if(Forward < TARGET_FORWARD-1)turn = 0;
+		if(Forward < TARGET_FORWARD-20)turn = 0;
 		
 		//倒立振り子API
 		balance_control(
