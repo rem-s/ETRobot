@@ -4,6 +4,7 @@
 #include "sensor_process.h"
 #include "bluetooth.h"
 #include "measure_position.h"
+#include "lookup_gate.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -228,7 +229,7 @@ void cyc_task1(intptr_t exinf)
 		//倒立振り子API
 		balance_control(
 			(float)Forward,
-			(float)turn,
+			(float)-1 * turn,
 			(float)gyro_sensor_value,
 			(float)Gyro_offset,
 			(float)left_motor_angle,

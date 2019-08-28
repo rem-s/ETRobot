@@ -1,6 +1,6 @@
 mkfile_path := $(dir $(lastword $(MAKEFILE_LIST)))
 
-APPL_COBJS += balancer.o balancer_param.o line_trace.o sensor_process.o bluetooth.o measure_position.o
+APPL_COBJS += balancer.o balancer_param.o line_trace.o sensor_process.o bluetooth.o measure_position.o lookup_gate.o
 
 APPL_CXXOBJS += 
 

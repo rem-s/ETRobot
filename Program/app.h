@@ -29,7 +29,7 @@ extern "C" {
 #endif /* STACK_SIZE */
 
 #define FIRST_TAIL_POSITION 84
-#define START_TAIL_POSITION 96
+#define START_TAIL_POSITION 97
 #define ISRUN_TAIL_POSITION 5
 
 //調整が必要
