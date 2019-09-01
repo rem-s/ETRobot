@@ -22,3 +22,7 @@ REMsの活動において、環境構築の仕方や技術的な問題を口頭�
 |3|Inspiron 545s|Win10Edu|Xeon X3220|8GB|128GB|NVIDIA Quadro600|10年前のハイエンド。|
 
 私は変なマシンしか持っていないので、マシン環境に起因する問題の解決には使えないと思う。しかし、開発用ツールはポンコツなPCでも動くことは証明できる。
+### 執筆者について
+
+部長(@aizu-wakamatsu)
+Data Networking Laboratory, University of Aizu
