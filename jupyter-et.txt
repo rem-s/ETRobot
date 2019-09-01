@@ -1,50 +1,51 @@
 rand/sh by taritari
 ----------
-�uET���{�R���Ɍ�����Jupyter Notebook�̃C���X�g�[���{�����v
+「ETロボコンに向けたJupyter Notebookのインストール＋何か」
 ----------
-[hogehoge]�͔C�ӂ̕�����(���ɂ��قȂ�)�B
-[N]�͔C�ӂ̒萔(���ɂ��قȂ�)�B
-���ׂĂ�[hogehoge]��[N]�̒��g�͂��Ȃ炸���������Ƃ͌���Ȃ��B
-[USERNAME]�͎����̃��[�U�[���B
-# �̌�̕�����̓^�[�~�i���̏o�́B
-$ �̌�̕�����͎������^�[�~�i���Ɍ������ē��͂��镶����B
-! �̌�̕�����͒��ӂ��ׂ����Ƃ⃁���B
+[hogehoge]は任意の文字列(環境により異なる)。
+[N]は任意の定数(環境により異なる)。
+すべての[hogehoge]や[N]の中身はかならずしも同じとは限らない。
+[USERNAME]は自分のユーザー名。
+# の後の文字列はターミナルの出力。
+$ の後の文字列は自分がターミナルに向かって入力する文字列。
+! の後の文字列は注意すべきことやメモ。
 ----------
-�C���X�g�[���������
-Python 3.[N] �ς�����
-Jupyter Notebook����҂��[�́[�ƂԂ���
-numpy �Ȃނۂ�
-matplotlib �܂��ƂՂ���Ƃ��
-pandas �ς񂾂�
+インストールするもの
+Python 3.[N] ぱいそん
+Jupyter Notebookじゅぴたーのーとぶっく
+numpy なむぽよ
+matplotlib まっとぷろっとりぶ
+pandas ぱんだす
 ----------
-�E�F�u�u���E�U��https://www.python.org/downloads/�ɃA�N�Z�X�B
-�T�C�g����"Download Python 3.[N].[N]"���N���b�N�B
-(�_�E�����[�h����́A�g�p����u���E�U�ɂ��قȂ�̂ŏȗ�)
-�_�E�����[�h���ꂽpython-3.[N].[N].exe���N������ƁA�����I��python�̃C���X�g�[�����n�܂�B
-�C���X�g�[�����Ƀ��[�U�̑��삪�v�������̂́A�C���X�g�[���I�����ɃC���X�g�[�������Ƃ��̈��̂݁B
-! �Ȍ�APython��^�[�~�i���͊Ǘ��Ҍ����Ŏ��s������̂Ƃ���B
-�^�[�~�i��(PowerShell�Ƃ�)��py�Ƒł��Ď��s���邱�Ƃ�Python���N���ł���B
+ウェブブラウザでhttps://www.python.org/downloads/にアクセス。
+サイト内の"Download Python 3.[N].[N]"をクリック。
+(ダウンロード操作は、使用するブラウザにより異なるので省略)
+ダウンロードされたpython-3.[N].[N].exeを起動すると、自動的にpythonのインストールが始まる。
+//インストール中にユーザの操作が要求されるのは、インストール終了時にインストーラを閉じるときの一回のみ。
+Add Python to PATHにチェックを入れて、Install Nowをクリック。
+! 以後、Pythonやターミナルは管理者権限で実行するものとする。
+ターミナル(PowerShellとか)でpyと打って実行することでPythonを起動できる。
 $ py
 # Python 3.[N].[N] ([hogehoge],[hogehoge])[[hogehoge]] on [hogehoge]
 # Type "help", "copyright", "credits" or "license" for more information.
 # >>>
->>>�̌�ɃR�}���h����͂���B
-quit()��Python���I���ł���B
+>>>の後にコマンドを入力する。
+quit()でPythonを終了できる。
 $ quit()
 # [hogehoge] >
-Jupyter�Ȃǂ�Python���g�p����c�[�����C���X�g�[������ɂ́Apip�Ƃ����p�b�P�[�W�}�l�[�W�����g�p����B
-Jupyter�ɃX�^���h�A�����E�C���X�g�[���͑��݂��Ȃ��B(Windows���[�U���˘f�����)
-pip��Python���C���X�g�[������Ə���ɂ��Ă���B
-Jupyter���C���X�g�[������O�ɁApip���A�b�v�O���[�h����B(�X�V�����Ă邩������Ȃ��̂�)
-python���I���������(�^�[�~�i���̉��)�ŁA���̃R�}���h����͂���B
+JupyterなどのPythonを使用するツールをインストールするには、pipというパッケージマネージャを使用する。
+Jupyterにスタンドアロン・インストーラは存在しない。(Windowsユーザが戸惑うやつ)
+pipはPythonをインストールすると勝手についてくる。
+Jupyterをインストールする前に、pipをアップグレードする。(更新が来てるかもしれないので)
+pythonを終了した状態(ターミナルの画面)で、下のコマンドを入力する。
 $ pip install --upgrade setuptools
 $ pip install --upgrade pip
-! ����pip�R�}���h�������ƌ���ꂽ��A���̃f�B���N�g���Ƀp�X��ʂ��B(�ʂ����͊��ɂ���ĈႤ�̂ŏȗ�)
+! もしpipコマンドが無いと言われたら、下のディレクトリにパスを通す。(通し方は環境によって違うので省略)
 ! C:\Users\[USERNAME]\AppData\Local\Programs\Python\Python[hogehoge]\Scripts
-pip�̃A�b�v�O���[�h���I�������Ajupyter���C���X�g�[������B
+pipのアップグレードが終わったら、jupyterをインストールする。
 $ pip install jupyter
-Jupyter�̃C���X�g�[�����ɑ���͈�ؕs�v�B����ɏI�����Ă����B
-Jupyter�̃C���X�g�[�����I�������A�����N�����Ă݂�B
+Jupyterのインストール中に操作は一切不要。勝手に終了してくれる。
+Jupyterのインストールが終わったら、早速起動してみる。
 $ jupyter notebook
 # [hogehoge]
 # To access the notebook, open this file in a browser:
@@ -52,19 +53,19 @@ $ jupyter notebook
 # Or copy and paste one of these URLs:
 #    http://localhost:8888/?token=[hogehoge]
 # or http://127.0.0.1:8888/?token=[hogehoge]
-Web�u���E�U�ŏ��URL�ɃA�N�Z�X����B(Edge��Chrome���]�܂���)
-Jupyter�̉�ʂ��o�Ă�ΐ����B
-(�t�@�C����)New���N���b�N��Python 3���N���b�N�ŐV�K�m�[�g�u�b�N���쐬�B�N�������C:\Users\[USERNAME]
-Hello World���Ă݂�B
-���̂Q�s��Jupyter Notebook�̉�ʁB
+Webブラウザで上のURLにアクセスする。(EdgeかChromeが望ましい)
+Jupyterの画面が出てれば成功。
+(ファイルを)Newをクリック→Python 3をクリックで新規ノートブックを作成。起動直後はC:\Users\[USERNAME]
+Hello Worldしてみる。
+下の２行はJupyter Notebookの画面。
 $ print("Hello World")
 # Hello World
-����ɓ��삷�邱�Ƃ��m�F�ł�����Jupyter Notebook�𗎂Ƃ��B
-File���N���b�N��Close and Halt���N���b�N�ŕҏW���I���ł���B(�����ۑ��H)
-Quit���N���b�N�ŃT�[�o�[�𗎂Ƃ��B
-�^�[�~�i���ɖ߂�B
-numpy��matplotlib��pandas���C���X�g�[������B
+正常に動作することが確認できたらJupyter Notebookを落とす。
+Fileをクリック→Close and Haltをクリックで編集を終了できる。(自動保存？)
+Quitをクリックでサーバーを落とす。
+ターミナルに戻る。
+numpyとmatplotlibとpandasをインストールする。
 $ pip install numpy
 $ pip install matplotlib
 $ pip install pandas
-���\�z�I���B
+環境構築終了。
