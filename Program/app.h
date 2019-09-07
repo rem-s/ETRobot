@@ -17,10 +17,10 @@ extern "C" {
  */
 #define MAIN_PRIORITY   TMIN_APP_TPRI + 1  /* メインタスクの優先度 */
 #define CYC1_PRIORITY 	TMIN_APP_TPRI + 3 /* 周期タスク１の優先度 */
-#define CYC2_PRIORITY 	TMIN_APP_TPRI + 2 /* 周期タスク１の優先度 */
-#define CYC3_PRIORITY 	TMIN_APP_TPRI + 2 /* 周期タスク１の優先度 */
-#define CYC4_PRIORITY 	TMIN_APP_TPRI + 2
-#define CYC5_PRIORITY 	TMIN_APP_TPRI + 3 // 周期タスク4(周期タスク1と同じ)
+#define CYC2_PRIORITY 	TMIN_APP_TPRI + 2 /* 周期タスク2の優先度 */
+#define CYC3_PRIORITY 	TMIN_APP_TPRI + 2 /* 周期タスク3の優先度 */
+#define CYC4_PRIORITY 	TMIN_APP_TPRI + 2 // 周期タスク4
+#define CYC5_PRIORITY 	TMIN_APP_TPRI + 3 // 周期タスク5(周期タスク1と同じ)
 
 /*
  *  ターゲットに依存する可能性のある定数の定義
@@ -36,7 +36,9 @@ extern "C" {
 #define LOOKUP_TAIL_POSITION 73
 
 //調整が必要
+// #define KFORWARD_START 0.020
 #define KFORWARD_START 0.020
+// #define KGYRO_OFFSET 0.025
 #define KGYRO_OFFSET 0.025
 #define TARGET_FORWARD 30
 #define LOOKUP_FORWARD 30

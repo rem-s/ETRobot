@@ -4,7 +4,6 @@
 #include "sensor_process.h"
 #include "bluetooth.h"
 #include "measure_position.h"
-// #include "lookup_gate.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -63,11 +62,11 @@ static int fall;
 volatile int sonor = 0;
 
 //ルックアップゲートを検知したかどうかの判定
-int bar_flag = 0;
+volatile int bar_flag = 0;
 
 volatile int sec_flag = 0;
 
-static float TARGET_GYRO_OFFSET = 2.0;
+volatile float TARGET_GYRO_OFFSET = 2.0;
 
 //ゲートをくぐっている間カウント(100msごとにカウント)
 static int bar_count = 0;
@@ -76,6 +75,8 @@ static int after_bar_count = 0;
 
 //ルックアップゲート内におけるturnの係数
 static volatile float beta = 0.050;
+
+int init_color_sensor_value;
 
 //初期化処理
 void initialize()
@@ -120,7 +121,7 @@ void initialize()
 	//テイルモーター初期化
 	tail_info.diff = 99;
 	tail_info.speed = 0.8;
-	tail_info.now_angle = ev3_motor_get_counts(tail_motor);;
+	tail_info.now_angle = ev3_motor_get_counts(tail_motor);
 	tail_info.target_angle = FIRST_TAIL_POSITION;
 	
 }
@@ -186,8 +187,8 @@ void cyc_task4(intptr_t exinf)
 	
 	if(bar_flag == 0)
 	{
-		//測距センサで取得した距離が14cm以下の場合、
-		if(sonor < 14) approach_count++;
+		//測距センサで取得した距離が20cm以下の場合、
+		if(sonor < 20) approach_count++;
 		else approach_count = 0;
 		
 		if(approach_count > 4)
@@ -195,7 +196,7 @@ void cyc_task4(intptr_t exinf)
 			bar_flag = 1;
 			ev3_stp_cyc(CYC_HANDLER1);
 			ev3_speaker_play_tone(NOTE_B6, 100);
-			TARGET_GYRO_OFFSET = -10.0;
+			// TARGET_GYRO_OFFSET = -10.0;
 			tail_info.speed = 0.8;
 			tail_info.target_angle = LOOKUP_TAIL_POSITION;
 			ev3_sta_cyc(CYC_HANDLER5);
@@ -204,7 +205,7 @@ void cyc_task4(intptr_t exinf)
 	else
 	{
 		//バー検知してからbar_countをカウント(100msごと)
-		if(bar_count++ > 20)
+		if(bar_count++ > 30)
 		{
 			ev3_speaker_play_tone(NOTE_G6, 100);
 			// TARGET_GYRO_OFFSET = 2.0;
@@ -228,7 +229,7 @@ void cyc_task4(intptr_t exinf)
 
 //周期タスク3
 void cyc_task3(intptr_t exinf)
-{	
+{
 	if(bluetooth_done == 0)
 	{
 		if(bluetooth_w())
@@ -245,6 +246,13 @@ void cyc_task3(intptr_t exinf)
 void cyc_task2(intptr_t exinf)
 {	
 	float tail_power;
+	
+	char message[30];
+	
+	//ev3の設置場所確認用にLCDにカラーセンサ値を表示する
+	init_color_sensor_value = ev3_color_sensor_get_reflect(color_sensor);
+	sprintf(message, "COLOR_VALUE:%d", init_color_sensor_value);
+	ev3_lcd_draw_string(message, 0, 10 );
 	
 	tail_info.now_angle = ev3_motor_get_counts(tail_motor);
 	tail_info.diff = tail_info.target_angle - tail_info.now_angle;
@@ -318,7 +326,7 @@ void cyc_task1(intptr_t exinf)
 		Forward += KFORWARD_START * (TARGET_FORWARD - Forward);
 		Gyro_offset += KGYRO_OFFSET * (TARGET_GYRO_OFFSET - Gyro_offset);
 
-		if(Forward < TARGET_FORWARD-7) turn = 0;
+		if(Forward < TARGET_FORWARD-20) turn = 0;
 		
 		//倒立振り子API
 		balance_control(
