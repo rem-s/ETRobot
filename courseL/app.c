@@ -1,4 +1,5 @@
-//コースL用(シーソーあり)
+//コースL用(シーソー有り)
+//ev3は黒線の左側に置くこと
 #include "app.h"
 #include "balancer.h"
 #include "line_trace.h"
@@ -139,25 +140,25 @@ void cyc_task5(intptr_t exinf)
 {
 	//区間の切り替え処理(サンプルコース用)
 	//1周分のみ
-	if(theta <= -1.57 && first_section)
+	if(theta >= 1.57 && first_section)
 	{
 		ev3_speaker_play_tone(NOTE_A4, 50);
 		first_section = 0;
 		second_section = 1;
 	}
-	else if(theta <= -3.14 && second_section)
+	else if(theta >= 3.14 && second_section)
 	{
 		ev3_speaker_play_tone(NOTE_B4, 50);
 		second_section = 0;
 		third_section = 1;
 	}
-	else if(theta <= -4.71 && third_section)
+	else if(theta >= 4.71 && third_section)
 	{
 		ev3_speaker_play_tone(NOTE_C4, 50);
 		third_section = 0;
 		forth_section = 1;
 	}
-	else if(theta <= -6.28 && forth_section)
+	else if(theta >= 6.28 && forth_section)
 	{
 		ev3_speaker_play_tone(NOTE_D4, 50);
 		forth_section = 0;
@@ -166,7 +167,6 @@ void cyc_task5(intptr_t exinf)
 	
 	//区間の切り替え処理(本番用)
 	//コースL用
-	// float error = 0.0;
 	// if(theta >= 3.14 && first_section)
 	// {
 		// ev3_speaker_play_tone(NOTE_A4, 50);
@@ -230,7 +230,7 @@ void cyc_task2(intptr_t exinf)
 	if(tail_power < -60) tail_power = -60;
 	
 	if(tail_power == 0) ev3_motor_stop(tail_motor, true);
-	else ev3_motor_set_power(tail_motor, (int)tail_power);	
+	else ev3_motor_set_power(tail_motor, (int)tail_power);
 	
 	if(tail_info.now_angle == START_TAIL_POSITION)
 	{
@@ -293,18 +293,46 @@ void cyc_task1(intptr_t exinf)
 		
 		Gyro_offset += KGYRO_OFFSET * (TARGET_GYRO_OFFSET - Gyro_offset);
 		
-		//フォワード
-		if(!forth_section)
+		//TARGET_FORWARDの値を区間ごとに分ける(サンプルコース用)
+		if(!final_section)
 		{
-			Forward += KFORWARD_START * (TARGET_FORWARD - Forward);
+			Forward += KFORWARD_FIRST * (TARGET_FORWARD - Forward);
 		}
 		else
 		{
 			TARGET_FORWARD = 30;
-			Forward += KFORWARD_BEFORE_LOOKUP * (TARGET_FORWARD - Forward);
+			Forward += KFORWARD_FINAL * (TARGET_FORWARD - Forward);
 		}
 
 		if(Forward < TARGET_FORWARD-20) turn = 0;
+		
+		
+		//TARGET_FORWARDの値を区間ごとに分ける(本番用)
+		// if(first_section)
+		// {
+			// Forward += KFORWARD_FIRST * (TARGET_FORWARD - Forward);
+		// }
+		// else if(second_section)
+		// {
+			// TARGET_FORWARD = 50;
+			// Forward += KFORWARD_SECOND * (TARGET_FORWARD - Forward);
+		// }
+		// else if(third_section)
+		// {
+			// TARGET_FORWARD = 80;
+			// Forward += KFORWARD_THIRD * (TARGET_FORWARD - Forward);
+		// }
+		// else if(forth_section)
+		// {
+			// TARGET_FORWARD = 50;
+			// Forward += KFORWARD_FORTH * (TARGET_FORWARD - Forward);
+		// }
+		
+		// else if(final_section)
+		// {
+			// TARGET_FORWARD = 30;
+			// Forward += KFORWARD_FINAL * (TARGET_FORWARD - Forward);
+		// }
 		
 		//倒立振り子API
 		balance_control(
@@ -319,6 +347,7 @@ void cyc_task1(intptr_t exinf)
 			(signed char*)&right_motor_pwm);
 			
 		//ファイル書き込み
+		//コースLでは黒線の左側に置くので、turnに-1かけること
 		fprintf(file, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
 				(float)color_sensor_value,
 				(float)color_sensor_normalize_value,
@@ -440,7 +469,7 @@ void main_task(intptr_t exinf)
 	//システムの削除
 	delete_system();
 	
-	ev3_speaker_play_tone(NOTE_C4, 1000);
+	// ev3_speaker_play_tone(NOTE_C4, 1000);
 
 	//タスクの終了
 	ext_tsk();
