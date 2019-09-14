@@ -10,8 +10,6 @@ extern "C" {
 //マクロ
 #define BLACK 20
 
-#define DESIRED_VALUE 30
-
 #define KU 0.65f
 #define PU 0.6f
 #define TI 0.5*PU
@@ -30,6 +28,8 @@ extern float e;
 extern float p;
 extern float i;
 extern float d;
+
+extern int DESIRED_VALUE;
 
 #endif /* TOPPERS_MACRO_ONLY */
 

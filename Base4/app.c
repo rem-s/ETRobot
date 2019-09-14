@@ -42,8 +42,8 @@ static tail_type tail_info = {99, 0, 0, 0.0};
 
 //スタートフォワード
 //Gyro_offsetは１０～２０などの間にすること
-static float Forward = 10;
-static float Gyro_offset = 12;
+static float Forward = 9;
+static float Gyro_offset = 9;
 
 //振り子センサカウント
 int color_sensor_value;
@@ -57,6 +57,14 @@ float speed;
 
 //倒れる判定変数
 static int fall;
+
+int seesawFlag = 0;
+int seesawCount = 0;
+int count = 0;
+int TARGET_FORWARD=80;
+int TARGET_GYRO_OFFSET=2;
+int DESIRED_VALUE=30;
+int FIRST_TAIL_POSITION=85;
 
 //初期化処理
 void initialize()
@@ -188,6 +196,7 @@ void cyc_task1(intptr_t exinf)
 	}
 
 	//タッチセンサONでメインタスクを起動する
+
 	if(touch_flag) wup_tsk(MAIN_TASK);
 
 	else if(fall > 100) wup_tsk(MAIN_TASK);
@@ -209,8 +218,8 @@ void cyc_task1(intptr_t exinf)
 		//倒立振り子変数
 		int right_motor_angle;
 		int left_motor_angle;
-		int gyro_sensor_value;
 		int voltage_value;
+    int gyro_sensor_value;
 		signed char right_motor_pwm;
 		signed char left_motor_pwm;
 		left_motor_angle = ev3_motor_get_counts(left_motor);
@@ -224,7 +233,40 @@ void cyc_task1(intptr_t exinf)
 		//フォワード
 		Forward += KFORWARD_START * (TARGET_FORWARD - Forward);
 		Gyro_offset += KGYRO_OFFSET * (TARGET_GYRO_OFFSET - Gyro_offset);
-		if(Forward < TARGET_FORWARD-20)turn = 0;
+    if(Forward < TARGET_FORWARD-1)turn = 0;
+
+    count++;
+
+    if(theta <= -3.00 + 0.05){
+      ev3_speaker_play_tone(NOTE_C4, 100);
+      Forward=100;
+      TARGET_FORWARD=100;
+      Gyro_offset=8;
+      TARGET_GYRO_OFFSET=8;
+      seesawCount++;
+      seesawFlag = 1;
+      }
+
+    if(seesawFlag == 1 && seesawCount >= 400){
+      ev3_speaker_play_tone(NOTE_A4, 100);
+      Forward=70;
+      TARGET_FORWARD=70;
+      Gyro_offset = -5;
+      TARGET_GYRO_OFFSET = -5;
+      seesawCount++;
+      seesawFlag = 2;
+    }
+
+    if(seesawFlag == 2 && seesawCount >= 770){
+      Gyro_offset = -12;
+      TARGET_GYRO_OFFSET = -12;
+      tail_info.speed = 0.8;
+    	tail_info.now_angle = ev3_motor_get_counts(tail_motor);
+    	tail_info.target_angle = FIRST_TAIL_POSITION - 10;
+
+      ev3_motor_stop(left_motor, true);
+      ev3_motor_stop(right_motor, true);
+    }
 
 		//倒立振り子API
 		balance_control(
@@ -239,7 +281,11 @@ void cyc_task1(intptr_t exinf)
 			(signed char*)&right_motor_pwm);
 
 		//ファイル書き込み
-		fprintf(file, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",(float)color_sensor_value,(float)color_sensor_normalize_value,(float)Forward,(float)turn,(float)gyro_sensor_value,(float)left_motor_angle,(float)right_motor_angle,(float)voltage_value,(float)left_motor_pwm,(float)right_motor_pwm,(float)Gyro_offset,(float)theta,(float)x_position,(float)y_position,(float)speed);
+		fprintf(file, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+    (float)color_sensor_value,(float)color_sensor_normalize_value,(float)Forward,(float)turn,
+    (float)gyro_sensor_value,(float)left_motor_angle,(float)right_motor_angle,(float)voltage_value,
+    (float)left_motor_pwm,(float)right_motor_pwm,(float)Gyro_offset,(float)theta,(float)x_position,
+    (float)y_position,(float)speed,(float)count,(float)seesawFlag,(float)seesawCount);
 
 		//左モーター制御
 		if(left_motor_pwm == 0) ev3_motor_stop(left_motor, false);
@@ -250,7 +296,7 @@ void cyc_task1(intptr_t exinf)
 		else ev3_motor_set_power(right_motor, (int)right_motor_pwm);
 
 		//終了判定用処理
-		if(abs(left_motor_pwm) > 90 || abs(right_motor) > 90)
+		if(abs(left_motor_pwm) > 90 || abs(right_motor_pwm) > 90)
 		{
 			fall++;
 		}
@@ -261,25 +307,8 @@ void cyc_task1(intptr_t exinf)
 
 		//自己位置判定
 		measure_position(right_motor_angle, left_motor_angle, &theta, &x_position, &y_position, &speed);
-
-    //追加した部分
-    if(gyro_sensor_value > 100){
-      ev3_speaker_play_tone(NOTE_D6, 1000);
-
-      //モータ停止
-      ev3_motor_stop(right_motor, true);
-      ev3_motor_stop(left_motor, true);
-
-      //テイルモーター初期化状態に戻す
-      tail_info.diff = 99;
-      tail_info.speed = 0.8;
-      tail_info.now_angle = ev3_motor_get_counts(tail_motor);;
-      tail_info.target_angle = FIRST_TAIL_POSITION;
-
-      ev3_led_set_color(LED_RED);
-      }
-      wup_tsk(MAIN_TASK);
     }
+
 	//周期タスクの終了
 	ext_tsk();
   }
