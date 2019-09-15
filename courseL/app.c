@@ -58,6 +58,8 @@ float speed;
 //倒れる判定変数
 static int fall;
 
+static float TARGET_GYRO_OFFSET = 2.0;
+
 //区間制御用フラグ
 volatile int first_section = 1;
 volatile int second_section = 0;
@@ -65,13 +67,7 @@ volatile int third_section = 0;
 volatile int forth_section = 0;
 volatile int final_section = 0;
 
-int seesawFlag = 0;
-int seesawCount = 0;
-int count = 0;
-float TARGET_FORWARD = 80;
-float TARGET_GYRO_OFFSET = 2.0;
-int DESIRED_VALUE = 30;
-int FIRST_TAIL_POSITION = 85;
+static float TARGET_FORWARD = 80;
 
 //初期化処理
 void initialize()
@@ -130,6 +126,7 @@ void delete_system()
 	//周期ハンドラの終了
 	ev3_stp_cyc(CYC_HANDLER1);
 	ev3_stp_cyc(CYC_HANDLER2);
+	// ev3_stp_cyc(CYC_HANDLER4);
 	ev3_stp_cyc(CYC_HANDLER5);
 	
 	//モーターストップ
@@ -246,7 +243,7 @@ void cyc_task2(intptr_t exinf)
 
 //周期タスク関数1
 void cyc_task1(intptr_t exinf)
-{
+{	
 	//テイルモーター確認
 	if(tail_info.target_angle == START_TAIL_POSITION) 
 	{
@@ -264,7 +261,7 @@ void cyc_task1(intptr_t exinf)
 	
 	//タッチセンサOFFで周期タスクの実行中断
 	else
-	{
+	{	
 		//タッチセンサ状態取得
 		touch_flag = ev3_touch_sensor_is_pressed(touch_sensor);
 		
@@ -336,42 +333,6 @@ void cyc_task1(intptr_t exinf)
 			// TARGET_FORWARD = 30;
 			// Forward += KFORWARD_FINAL * (TARGET_FORWARD - Forward);
 		// }
-		
-		count++;
-
-		if(theta <= -3.00 + 0.05)
-		{
-			ev3_speaker_play_tone(NOTE_C4, 100);
-			Forward=100;
-			TARGET_FORWARD=100;
-			Gyro_offset=8;
-			TARGET_GYRO_OFFSET=8;
-			seesawCount++;
-			seesawFlag = 1;
-		}
-
-		if(seesawFlag == 1 && seesawCount >= 400)
-		{
-			ev3_speaker_play_tone(NOTE_A4, 100);
-			Forward=70;
-			TARGET_FORWARD=70;
-			Gyro_offset = -5;
-			TARGET_GYRO_OFFSET = -5;
-			seesawCount++;
-			seesawFlag = 2;
-		}
-
-		if(seesawFlag == 2 && seesawCount >= 770)
-		{
-			Gyro_offset = -12;
-			TARGET_GYRO_OFFSET = -12;
-			tail_info.speed = 0.8;
-			tail_info.now_angle = ev3_motor_get_counts(tail_motor);
-			tail_info.target_angle = FIRST_TAIL_POSITION - 10;
-
-			ev3_motor_stop(left_motor, true);
-			ev3_motor_stop(right_motor, true);
-		}
 		
 		//倒立振り子API
 		balance_control(
@@ -494,6 +455,7 @@ void main_task(intptr_t exinf)
 	
 	//周期ハンドラの起動
 	ev3_sta_cyc(CYC_HANDLER1);
+	// ev3_sta_cyc(CYC_HANDLER4);
 	ev3_sta_cyc(CYC_HANDLER5);
 
 	//メインタスクのスリープ

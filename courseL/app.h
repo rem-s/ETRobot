@@ -36,6 +36,7 @@ extern "C" {
 #define STACK_SIZE      4096        /* タスクのスタックサイズ */
 #endif /* STACK_SIZE */
 
+#define FIRST_TAIL_POSITION 85
 #define START_TAIL_POSITION 97
 #define ISRUN_TAIL_POSITION 5
 
