@@ -1,5 +1,7 @@
 # ETRobot
 
+ETロボコン2019
+
 ### Masterプログラムの概要
 ##### bluetooth_w関数
 Bluetooth通信待ち関数    
